@@ -1,7 +1,7 @@
 package com.ch.common.intercepotors;
 
-import com.ch.user.domain.Registry;
 import com.ch.common.handle.UserHandle;
+import com.ch.user.domain.Registry;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -15,7 +15,7 @@ import java.io.IOException;
 public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object o) throws IOException {
-        request.getRequestURL();
+        StringBuffer url = request.getRequestURL();
         Object userInfo = request.getSession().getAttribute("user_info");
         if (null == userInfo) {
             response.sendRedirect("/view/login.html");

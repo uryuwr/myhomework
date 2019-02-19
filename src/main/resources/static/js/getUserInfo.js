@@ -1,4 +1,4 @@
-window.onload = function (){
+$(document).ready(function () {
     $.ajax({
         type: "GET",
         contentType: 'application/json;charset=utf-8',
@@ -8,6 +8,7 @@ window.onload = function (){
         dataType: "JSON",
         success: function (data) {
             $("#user_name").html(data.userName);
+            getWebsocket(data);
         }
     });
-};
+});

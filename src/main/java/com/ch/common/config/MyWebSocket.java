@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.*;
+import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -12,29 +13,36 @@ import java.util.concurrent.CopyOnWriteArraySet;
 /**
  * @author Chen on 2019-02-16-14:39
  */
-@ServerEndpoint(value = "/websocket")
+@ServerEndpoint(value = "/websocket/{sid}")
 @Component
 public class MyWebSocket {
     private static final Logger log = LoggerFactory.getLogger(MyWebSocket.class);
     private static int onlineCount = 0;
-    //concurrent包的线程安全Set，用来存放每个客户端对应的MyWebSocket对象。
+    /**
+     * concurrent包的线程安全Set，用来存放每个客户端对应的MyWebSocket对象。
+     */
     private static CopyOnWriteArraySet<MyWebSocket> webSocketSet = new CopyOnWriteArraySet<>();
 
-    //与某个客户端的连接会话，需要通过它来给客户端发送数据
+    /**
+     * 与某个客户端的连接会话，需要通过它来给客户端发送数据
+     */
     private Session session;
+
+    private String sid = "";
 
     /**
      * 连接建立成功调用的方法*/
     @OnOpen
-    public void onOpen(Session session) {
+    public void onOpen(Session session, @PathParam("sid") String sid) {
         this.session = session;
         //加入set中
         webSocketSet.add(this);
         //在线数加1
         addOnlineCount();
         log.info("有新连接加入！当前在线人数为" + getOnlineCount());
+        this.sid = sid;
         try {
-            sendMessage("当前在线人数为" + getOnlineCount());
+            sendMessage("当前用户为" + sid);
         } catch (IOException e) {
             log.error("io error",e);
         }
@@ -58,7 +66,7 @@ public class MyWebSocket {
      * @param message 客户端发送过来的消息*/
     @OnMessage
     public void onMessage(String message, Session session) {
-        log.info("来自客户端的消息:" + message);
+        log.info("来自客户端" + sid + "的消息:" + message);
         //群发消息
         for (MyWebSocket item : webSocketSet) {
             try {
@@ -74,8 +82,23 @@ public class MyWebSocket {
         log.error("发生错误",error);
     }
 
+    /**
+     * 服务端主动推送
+     * @param message
+     * @throws IOException
+     */
     public void sendMessage(String message) throws IOException {
         this.session.getBasicRemote().sendText(message);
+    }
+
+    public static void sendInfo(String message,@PathParam("sid") String sid) throws IOException {
+        for (MyWebSocket item : webSocketSet) {
+            if (null == sid) {
+                item.sendMessage(message);
+            } else if (item.sid.equals(sid)) {
+                item.sendMessage(message);
+            }
+        }
     }
 
     public static synchronized int getOnlineCount() {

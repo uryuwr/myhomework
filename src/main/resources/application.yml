@@ -7,7 +7,7 @@
       driver-class-name: com.mysql.jdbc.Driver
       url: jdbc:mysql://localhost:3306/dev_manage?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true
       username: root
-      password: root
+      password: 123456
       initialSize: 3
       minidle: 3
       maxActive: 18
